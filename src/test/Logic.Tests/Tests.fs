@@ -86,6 +86,64 @@ let overlapTests =
       
       Expect.isTrue (Logic.overlapsWith request2 request1) "The request should overlaps"
     }
+    
+    test "Requests overlaps with a set of requests" {
+      let newRequest = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2019, 09, 12); HalfDay = AM }
+        End = { Date = DateTime(2019, 09, 13); HalfDay = PM }
+      }
+      
+      let existingRequests = [
+        {
+          UserId = "jdoe"
+          RequestId = Guid.NewGuid()
+          Start = { Date = DateTime(2019, 09, 10); HalfDay = AM }
+          End = { Date = DateTime(2019, 09, 11); HalfDay = PM }
+        };
+        {
+          UserId = "jdoe"
+          RequestId = Guid.NewGuid()
+          Start = { Date = DateTime(2019, 09, 13); HalfDay = PM }
+          End = { Date = DateTime(2019, 09, 14); HalfDay = PM }
+        }
+      ]
+      
+      let existingRequestsAsSeq = Seq.ofList existingRequests
+      
+      Expect.isTrue (Logic.overlapsWithAnyRequest existingRequestsAsSeq newRequest)
+        "The request should overlaps with the sequence"
+    }
+    
+    test "Requests don't overlaps with a set of requests" {
+      let newRequest = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2019, 09, 12); HalfDay = AM }
+        End = { Date = DateTime(2019, 09, 12); HalfDay = PM }
+      }
+      
+      let existingRequests = [
+        {
+          UserId = "jdoe"
+          RequestId = Guid.NewGuid()
+          Start = { Date = DateTime(2019, 09, 10); HalfDay = AM }
+          End = { Date = DateTime(2019, 09, 11); HalfDay = PM }
+        };
+        {
+          UserId = "jdoe"
+          RequestId = Guid.NewGuid()
+          Start = { Date = DateTime(2019, 09, 13); HalfDay = PM }
+          End = { Date = DateTime(2019, 09, 14); HalfDay = PM }
+        }
+      ]
+      
+      let existingRequestsAsSeq = Seq.ofList existingRequests
+      
+      Expect.isFalse (Logic.overlapsWithAnyRequest existingRequestsAsSeq newRequest)
+        "The request shouldn't overlaps with the sequence"
+    }
   ]
 
 [<Tests>]
