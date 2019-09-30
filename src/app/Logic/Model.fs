@@ -1,7 +1,5 @@
-﻿namespace TimeOff
+namespace TimeOff
 
-open System
-open System
 open System
 
 // Then our commands
