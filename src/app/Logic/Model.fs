@@ -6,21 +6,25 @@ open System
 type Command =
     | RequestTimeOff of TimeOffRequest
     | ValidateRequest of UserId * Guid
+    | DenyRequest of UserId * Guid
     with
     member this.UserId =
         match this with
         | RequestTimeOff request -> request.UserId
         | ValidateRequest (userId, _) -> userId
+        | DenyRequest (userId, _) -> userId
 
 // And our events
 type RequestEvent =
     | RequestCreated of TimeOffRequest
     | RequestValidated of TimeOffRequest
+    | RequestDenied of TimeOffRequest
     with
     member this.Request =
         match this with
         | RequestCreated request -> request
         | RequestValidated request -> request
+        | RequestDenied request -> request
 
 // We then define the state of the system,
 // and our 2 main functions `decide` and `evolve`
@@ -75,6 +79,13 @@ module Logic =
             Ok [RequestValidated request]
         | _ ->
             Error "Request cannot be validated"
+    
+    let denyRequest requestState =
+        match requestState with
+        | PendingValidation request ->
+            Ok [RequestDenied request]
+        | _ ->
+            Error "Request cannot be denied"
 
     let decide (userRequests: UserRequestsState) (user: User) (command: Command) =
         let relatedUserId = command.UserId
@@ -99,3 +110,9 @@ module Logic =
                 else
                     let requestState = defaultArg (userRequests.TryFind requestId) NotCreated
                     validateRequest requestState
+            | DenyRequest (_, requestId) ->
+                if user <> Manager then
+                    Error "Unauthorized"
+                else
+                    let requestState = defaultArg (userRequests.TryFind requestId) NotCreated
+                    denyRequest requestState
