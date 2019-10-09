@@ -179,3 +179,49 @@ let validationTests =
       |> Then (Ok [RequestValidated request]) "The request should have been validated"
     }
   ]
+  
+[<Tests>]
+let cancelTests =
+  testList "Cancel tests" [
+    test "A request is canceled" {
+      let request = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2019, 12, 27); HalfDay = AM }
+        End = { Date = DateTime(2019, 12, 27); HalfDay = PM }
+      }
+      
+      Given [ RequestCreated request ]
+      |> ConnectedAs (Employee "jdoe") 
+      |> When (CancelRequest ("jdoe", request.RequestId))
+      |> Then (Ok [RequestCanceled request]) "The request should have been canceled"
+    }
+    
+    test "A request cant be canceled" {
+      let request = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2019, 12, 27); HalfDay = AM }
+        End = { Date = DateTime(2019, 12, 27); HalfDay = PM }
+      }
+      
+      Given [ RequestCreated request ]
+      |> ConnectedAs (Employee "other") 
+      |> When (CancelRequest ("jdoe", request.RequestId))
+      |> Then (Error "Unauthorized") "The request should have been already canceled"
+    }
+    
+    test "A request already canceled" {
+      let request = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2019, 12, 27); HalfDay = AM }
+        End = { Date = DateTime(2019, 12, 27); HalfDay = PM }
+      }
+      
+      Given [ RequestCanceled request ]
+      |> ConnectedAs (Employee "jdoe") 
+      |> When (CancelRequest ("jdoe", request.RequestId))
+      |> Then (Error "Request already canceled") "The request should have been already canceled"
+    }
+  ]
