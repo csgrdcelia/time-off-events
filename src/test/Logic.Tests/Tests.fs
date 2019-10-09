@@ -208,7 +208,7 @@ let cancelTests =
       Given [ RequestCreated request ]
       |> ConnectedAs (Employee "other") 
       |> When (CancelRequest ("jdoe", request.RequestId))
-      |> Then (Error "Unauthorized") "The request should have been already canceled"
+      |> Then (Error "Unauthorized") "The user should not authorized to canceled the request"
     }
     
     test "A request already canceled" {
