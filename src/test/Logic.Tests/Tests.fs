@@ -179,3 +179,77 @@ let validationTests =
       |> Then (Ok [RequestValidated request]) "The request should have been validated"
     }
   ]
+  
+[<Tests>]
+let cancelTests =
+  testList "Cancel tests" [
+    test "A request is cancelled" {
+      let request = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2019, 12, 27); HalfDay = AM }
+        End = { Date = DateTime(2019, 12, 27); HalfDay = PM }
+      }
+      
+      Given [ RequestCreated request ]
+      |> ConnectedAs (Employee "jdoe") 
+      |> When (CancelRequest ("jdoe", request.RequestId))
+      |> Then (Ok [RequestCancelled request]) "The request should have been cancelled"
+    }
+    
+    test "A request can't be cancelled" {
+      let request = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2019, 12, 27); HalfDay = AM }
+        End = { Date = DateTime(2019, 12, 27); HalfDay = PM }
+      }
+      
+      Given [ RequestCreated request ]
+      |> ConnectedAs (Employee "other") 
+      |> When (CancelRequest ("jdoe", request.RequestId))
+      |> Then (Error "Unauthorized") "The user should not authorized to cancel the request"
+    }
+    
+    test "A request already cancelled" {
+      let request = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2019, 12, 27); HalfDay = AM }
+        End = { Date = DateTime(2019, 12, 27); HalfDay = PM }
+      }
+      
+      Given [ RequestCancelled request ]
+      |> ConnectedAs (Employee "jdoe") 
+      |> When (CancelRequest ("jdoe", request.RequestId))
+      |> Then (Error "Request already cancelled") "The request should have been already cancelled"
+    }
+    
+    test "Manager can cancel the validated request" {
+      let request = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2019, 12, 27); HalfDay = AM }
+        End = { Date = DateTime(2019, 12, 27); HalfDay = PM }
+      }
+      
+      Given [ RequestValidated request ]
+      |> ConnectedAs Manager
+      |> When (CancelRequest ("jdoe", request.RequestId))
+      |> Then (Ok [RequestCancelled request]) "The request should have been cancelled"
+    }
+    
+    test "Manager can't cancel not validated request" {
+      let request = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2019, 12, 27); HalfDay = AM }
+        End = { Date = DateTime(2019, 12, 27); HalfDay = PM }
+      }
+      
+      Given [ RequestCreated request ]
+      |> ConnectedAs Manager
+      |> When (CancelRequest ("jdoe", request.RequestId))
+      |> Then (Error "Unauthorized") "The request should not have been cancelled"
+    }
+  ]
