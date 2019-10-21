@@ -3,6 +3,7 @@ module TimeOff.Tests
 open Expecto
 open System
 
+let currentDate = DateTime(2019,10,1)
 let Given (events: RequestEvent list) = events
 let ConnectedAs (user: User) (events: RequestEvent list) = events, user
 let When (command: Command) (events: RequestEvent list, user: User) = events, user, command
@@ -14,7 +15,7 @@ let Then expected message (events: RequestEvent list, user: User, command: Comma
 
     let globalState = Seq.fold evolveGlobalState Map.empty events 
     let userRequestsState = defaultArg (Map.tryFind command.UserId globalState) Map.empty
-    let result = Logic.decide userRequestsState user command
+    let result = Logic.decide currentDate userRequestsState user command
     Expect.equal result expected message
 
 [<Tests>]
