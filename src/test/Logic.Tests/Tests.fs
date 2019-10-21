@@ -12,12 +12,10 @@ let Then expected message (events: RequestEvent list, user: User, command: Comma
         let newUserState = Logic.evolveUserRequests userState event
         userStates.Add (event.Request.UserId, newUserState)
 
-    let globalState = Seq.fold evolveGlobalState Map.empty events
+    let globalState = Seq.fold evolveGlobalState Map.empty events 
     let userRequestsState = defaultArg (Map.tryFind command.UserId globalState) Map.empty
     let result = Logic.decide userRequestsState user command
     Expect.equal result expected message
-
-open System
 
 [<Tests>]
 let overlapTests = 
@@ -162,7 +160,7 @@ let creationTests =
       |> Then (Ok [RequestCreated request]) "The request should have been created"
     }
   ]
-
+  
 [<Tests>]
 let validationTests =
   testList "Validation tests" [
@@ -177,6 +175,36 @@ let validationTests =
       |> ConnectedAs Manager
       |> When (ValidateRequest ("jdoe", request.RequestId))
       |> Then (Ok [RequestValidated request]) "The request should have been validated"
+    }
+  ]
+  
+[<Tests>]
+let denyTests =
+  testList "Validation tests" [
+    test "A request is denied" {
+      let request = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2019, 12, 27); HalfDay = AM }
+        End = { Date = DateTime(2019, 12, 27); HalfDay = PM } }
+
+      Given [ RequestCreated request ]
+      |> ConnectedAs Manager
+      |> When (DenyRequest ("jdoe", request.RequestId))
+      |> Then (Ok [RequestDenied request]) "The request should have been denied"
+    }
+    
+    test "Employee can't deny his request" {
+      let request = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2019, 12, 27); HalfDay = AM }
+        End = { Date = DateTime(2019, 12, 27); HalfDay = PM } }
+
+      Given [ RequestCreated request ]
+      |> ConnectedAs (Employee "jdoe")
+      |> When (DenyRequest ("jdoe", request.RequestId))
+      |> Then (Error "Unauthorized") "The request should have been denied by a manager"
     }
   ]
   

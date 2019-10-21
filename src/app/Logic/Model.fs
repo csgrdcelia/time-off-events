@@ -7,24 +7,28 @@ type Command =
     | RequestTimeOff of TimeOffRequest
     | ValidateRequest of UserId * Guid
     | CancelRequest of UserId * Guid
+    | DenyRequest of UserId * Guid
     with
     member this.UserId =
         match this with
         | RequestTimeOff request -> request.UserId
         | ValidateRequest (userId, _) -> userId
         | CancelRequest (userId, _) -> userId
+        | DenyRequest (userId, _) -> userId
 
 // And our events
 type RequestEvent =
     | RequestCreated of TimeOffRequest
     | RequestValidated of TimeOffRequest
     | RequestCancelled of TimeOffRequest
+    | RequestDenied of TimeOffRequest
     with
     member this.Request =
         match this with
         | RequestCreated request -> request
         | RequestValidated request -> request
         | RequestCancelled request -> request
+        | RequestDenied request -> request
 
 // We then define the state of the system,
 // and our 2 main functions `decide` and `evolve`
@@ -34,19 +38,22 @@ module Logic =
         | NotCreated
         | Cancelled of TimeOffRequest
         | PendingValidation of TimeOffRequest
-        | Validated of TimeOffRequest with
+        | Validated of TimeOffRequest
+        | Denied of TimeOffRequest with
         member this.Request =
             match this with
             | NotCreated -> invalidOp "Not created"
             | Cancelled request -> request
             | PendingValidation request
             | Validated request -> request
+            | Denied request -> request
         member this.IsActive =
             match this with
             | NotCreated -> false
             | Cancelled _ -> true
             | PendingValidation _
             | Validated _ -> true
+            | Denied _ -> false
 
     type UserRequestsState = Map<Guid, RequestState>
 
@@ -92,6 +99,13 @@ module Logic =
             Ok [RequestCancelled request]
         | _ ->
             Error "Request already cancelled"
+            
+    let denyRequest requestState =
+        match requestState with
+        | PendingValidation request ->
+            Ok [RequestDenied request]
+        | _ ->
+            Error "Request cannot be denied"
 
     let decide (userRequests: UserRequestsState) (user: User) (command: Command) =
         let relatedUserId = command.UserId
@@ -122,3 +136,9 @@ module Logic =
                     cancelRequest requestState
                 else
                     Error "Unauthorized"
+            | DenyRequest (_, requestId) ->
+                if user <> Manager then
+                    Error "Unauthorized"
+                else
+                    let requestState = defaultArg (userRequests.TryFind requestId) NotCreated
+                    denyRequest requestState
