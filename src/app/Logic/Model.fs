@@ -69,18 +69,17 @@ module Logic =
         let newRequestState = evolveRequest requestState event
         userRequests.Add (event.Request.RequestId, newRequestState)
     
-    let overlapsWith (request1: TimeOffRequest) (request2: TimeOffRequest) =
+    let overlapsWith (request1: TimeOffRequest) (request2: TimeOffRequest)  =
         request1.Start <= request2.Start && request1.End >= request2.Start ||
         request1.Start <= request2.End && request1.End >= request2.End
 
     let overlapsWithAnyRequest (otherRequests: TimeOffRequest seq) request =
-        Seq.exists (overlapsWith request) otherRequests
+        Seq.exists (overlapsWith request) otherRequests 
 
-    let createRequest activeUserRequests  request =
+    let createRequest activeUserRequests currentDate request =
         if request |> overlapsWithAnyRequest activeUserRequests then
             Error "Overlapping request"
-        // This DateTime.Today must go away!
-        elif request.Start.Date <= DateTime.Today then
+        elif request.Start.Date <= currentDate then
             Error "The request starts in the past"
         else
             Ok [RequestCreated request]
@@ -108,7 +107,7 @@ module Logic =
         | _ ->
             Error "Request cannot be denied"
 
-    let decide (userRequests: UserRequestsState) (user: User) (command: Command) =
+    let decide (currentDate: DateTime) (userRequests: UserRequestsState) (user: User) (command: Command) =
         let relatedUserId = command.UserId
         match user with
         | Employee userId when userId <> relatedUserId ->
@@ -123,7 +122,7 @@ module Logic =
                     |> Seq.where (fun state -> state.IsActive)
                     |> Seq.map (fun state -> state.Request)
 
-                createRequest activeUserRequests request
+                createRequest activeUserRequests currentDate request
 
             | ValidateRequest (_, requestId) ->
                 if user <> Manager then
