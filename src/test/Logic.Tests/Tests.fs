@@ -295,7 +295,33 @@ let askForCancellationTests =
       Given [ RequestValidated request ]
       |> ConnectedAs (Employee "jdoe") 
       |> When (AskForCancellation ("jdoe", request.RequestId))
-      |> Then (Ok [RequestAwaitingCancellation request]) "The request should be waiting for cancellation"
+      |> Then (Ok [RequestPendingCancellation request]) "The request should be waiting for cancellation"
+    }
+    
+    test "Ask for cancellation of a started but not validated request" {
+      let request = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2019, 09, 30); HalfDay = AM }
+        End = { Date = DateTime(2019, 10, 3); HalfDay = PM } }
+
+      Given [ RequestCreated request ]
+      |> ConnectedAs (Employee "jdoe") 
+      |> When (AskForCancellation ("jdoe", request.RequestId))
+      |> Then (Error "Request cannot be pending cancellation") "Request cannot be pending cancellation because it has not been validated"
+    }
+    
+    test "Ask for cancellation of a started but denied request" {
+      let request = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2019, 09, 30); HalfDay = AM }
+        End = { Date = DateTime(2019, 10, 3); HalfDay = PM } }
+
+      Given [ RequestDenied request ]
+      |> ConnectedAs (Employee "jdoe") 
+      |> When (AskForCancellation ("jdoe", request.RequestId))
+      |> Then (Error "Request cannot be pending cancellation") "Request cannot be pending cancellation because it was denied"
     }
     
     test "Ask for cancellation of a not started request" {
@@ -309,6 +335,19 @@ let askForCancellationTests =
       |> ConnectedAs (Employee "jdoe") 
       |> When (AskForCancellation ("jdoe", request.RequestId))
       |> Then (Error "The request can be cancelled directly") "The request can be cancelled directly"
+    }
+    
+    test "Ask for cancellation by manager of a started request" {
+      let request = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2019, 09, 30); HalfDay = AM }
+        End = { Date = DateTime(2019, 10, 3); HalfDay = PM } }
+
+      Given [ RequestValidated request ]
+      |> ConnectedAs Manager
+      |> When (AskForCancellation ("jdoe", request.RequestId))
+      |> Then (Error "Unauthorized") "The manager is unauthorized"
     }
     
   ]
