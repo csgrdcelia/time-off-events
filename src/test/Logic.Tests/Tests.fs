@@ -282,3 +282,20 @@ let cancelTests =
       |> Then (Error "Unauthorized") "The request should not have been cancelled"
     }
   ]
+[<Tests>] 
+let askForCancellationTests =
+  testList "Ask for cancellation tests" [
+    test "Ask for cancellation of a started validated request" {
+      let request = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2019, 09, 30); HalfDay = AM }
+        End = { Date = DateTime(2019, 10, 3); HalfDay = PM } }
+
+      Given [ RequestValidated request ]
+      |> ConnectedAs (Employee "jdoe") 
+      |> When (AskForCancellation ("jdoe", request.RequestId))
+      |> Then (Ok [RequestAwaitingCancellation request]) "The request should be waiting for cancellation"
+    }
+    
+  ]

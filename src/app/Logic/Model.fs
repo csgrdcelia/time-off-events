@@ -7,6 +7,7 @@ type Command =
     | RequestTimeOff of TimeOffRequest
     | ValidateRequest of UserId * Guid
     | CancelRequest of UserId * Guid
+    | AskForCancellation of UserId * Guid
     | DenyRequest of UserId * Guid
     with
     member this.UserId =
@@ -14,6 +15,7 @@ type Command =
         | RequestTimeOff request -> request.UserId
         | ValidateRequest (userId, _) -> userId
         | CancelRequest (userId, _) -> userId
+        | AskForCancellation (userId, _) -> userId
         | DenyRequest (userId, _) -> userId
 
 // And our events
@@ -22,6 +24,7 @@ type RequestEvent =
     | RequestValidated of TimeOffRequest
     | RequestCancelled of TimeOffRequest
     | RequestDenied of TimeOffRequest
+    | RequestAwaitingCancellation of TimeOffRequest
     with
     member this.Request =
         match this with
@@ -29,6 +32,7 @@ type RequestEvent =
         | RequestValidated request -> request
         | RequestCancelled request -> request
         | RequestDenied request -> request
+        | RequestAwaitingCancellation request -> request
 
 // We then define the state of the system,
 // and our 2 main functions `decide` and `evolve`
@@ -38,6 +42,7 @@ module Logic =
         | NotCreated
         | Cancelled of TimeOffRequest
         | PendingValidation of TimeOffRequest
+        | PendingCancellation of TimeOffRequest
         | Validated of TimeOffRequest
         | Denied of TimeOffRequest with
         member this.Request =
@@ -45,6 +50,7 @@ module Logic =
             | NotCreated -> invalidOp "Not created"
             | Cancelled request -> request
             | PendingValidation request
+            | PendingCancellation request
             | Validated request -> request
             | Denied request -> request
         member this.IsActive =
@@ -52,6 +58,7 @@ module Logic =
             | NotCreated -> false
             | Cancelled _ -> true
             | PendingValidation _
+            | PendingValidation _ -> true
             | Validated _ -> true
             | Denied _ -> false
 
@@ -106,6 +113,13 @@ module Logic =
             Ok [RequestDenied request]
         | _ ->
             Error "Request cannot be denied"
+            
+    let askForCancellation requestState =
+        match requestState with
+        | Validated request ->
+            Ok [RequestAwaitingCancellation request]
+        | _ ->
+            Error "Request cannot be pending cancellation"
 
     let decide (currentDate: DateTime) (userRequests: UserRequestsState) (user: User) (command: Command) =
         let relatedUserId = command.UserId
@@ -136,6 +150,12 @@ module Logic =
                     cancelRequest requestState
                 else
                     Error "Unauthorized"
+            | AskForCancellation (_, requestId) ->
+                if (user <> Employee relatedUserId) then
+                    Error "Unauthorized"
+                else
+                    let requestState = defaultArg (userRequests.TryFind requestId) NotCreated
+                    askForCancellation requestState
             | DenyRequest (_, requestId) ->
                 if user <> Manager then
                     Error "Unauthorized"
