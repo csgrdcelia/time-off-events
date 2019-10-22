@@ -58,7 +58,7 @@ module Logic =
             | NotCreated -> false
             | Cancelled _ -> true
             | PendingValidation _
-            | PendingValidation _ -> true
+            | PendingCancellation _ -> true
             | Validated _ -> true
             | Denied _ -> false
 
@@ -148,7 +148,7 @@ module Logic =
             | CancelRequest (_, requestId) ->
                 let requestState = defaultArg (userRequests.TryFind requestId) NotCreated
                 if currentDate >= requestState.Request.Start.Date then
-                    Error "The request has begun"
+                    Error "The request has begun or begins this afternoon"
                 else if (user = Manager && (userRequests.TryFind requestId).Value = Validated (userRequests.TryFind requestId).Value.Request ) || user = Employee relatedUserId then
                     cancelRequest requestState
                 else

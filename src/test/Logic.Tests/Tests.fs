@@ -293,7 +293,21 @@ let cancelTests =
       Given [ RequestCreated request ]
       |> ConnectedAs (Employee "jdoe") 
       |> When (CancelRequest ("jdoe", request.RequestId))
-      |> Then (Error "The request has begun") "The user should ask for cancellation"
+      |> Then (Error "The request has begun or begins this afternoon") "The user should ask for cancellation"
+    }
+    
+    test "User can't cancel request that start on the afternoon" {
+      let request = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2019, 10, 01); HalfDay = PM }
+        End = { Date = DateTime(2019, 12, 27); HalfDay = PM }
+      }
+      
+      Given [ RequestCreated request ]
+      |> ConnectedAs (Employee "jdoe") 
+      |> When (CancelRequest ("jdoe", request.RequestId))
+      |> Then (Error "The request has begun or begins this afternoon") "The user should ask for cancellation"
     }
   ]
 [<Tests>] 
@@ -304,6 +318,19 @@ let askForCancellationTests =
         UserId = "jdoe"
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 09, 30); HalfDay = AM }
+        End = { Date = DateTime(2019, 10, 3); HalfDay = PM } }
+
+      Given [ RequestValidated request ]
+      |> ConnectedAs (Employee "jdoe") 
+      |> When (AskForCancellation ("jdoe", request.RequestId))
+      |> Then (Ok [RequestPendingCancellation request]) "The request should be waiting for cancellation"
+    }
+    
+    test "Ask for cancellation of a validated request that starts in the afternoon" {
+      let request = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2019, 10, 01); HalfDay = PM }
         End = { Date = DateTime(2019, 10, 3); HalfDay = PM } }
 
       Given [ RequestValidated request ]
