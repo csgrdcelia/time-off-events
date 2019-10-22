@@ -237,7 +237,7 @@ let cancelTests =
       Given [ RequestCreated request ]
       |> ConnectedAs (Employee "other") 
       |> When (CancelRequest ("jdoe", request.RequestId))
-      |> Then (Error "Unauthorized") "The user should not authorized to cancel the request"
+      |> Then (Error "Unauthorized") "The user should not be authorized to cancel the request"
     }
     
     test "A request already cancelled" {
@@ -280,6 +280,20 @@ let cancelTests =
       |> ConnectedAs Manager
       |> When (CancelRequest ("jdoe", request.RequestId))
       |> Then (Error "Unauthorized") "The request should not have been cancelled"
+    }
+    
+    test "User can't cancel started request" {
+      let request = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2019, 09, 27); HalfDay = AM }
+        End = { Date = DateTime(2019, 12, 27); HalfDay = PM }
+      }
+      
+      Given [ RequestCreated request ]
+      |> ConnectedAs (Employee "jdoe") 
+      |> When (CancelRequest ("jdoe", request.RequestId))
+      |> Then (Error "The request has begun") "The user should ask for cancellation"
     }
   ]
 [<Tests>] 

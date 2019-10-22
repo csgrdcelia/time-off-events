@@ -147,7 +147,9 @@ module Logic =
                     validateRequest requestState
             | CancelRequest (_, requestId) ->
                 let requestState = defaultArg (userRequests.TryFind requestId) NotCreated
-                if (user = Manager && (userRequests.TryFind requestId).Value = Validated (userRequests.TryFind requestId).Value.Request ) || user = Employee relatedUserId then
+                if currentDate >= requestState.Request.Start.Date then
+                    Error "The request has begun"
+                else if (user = Manager && (userRequests.TryFind requestId).Value = Validated (userRequests.TryFind requestId).Value.Request ) || user = Employee relatedUserId then
                     cancelRequest requestState
                 else
                     Error "Unauthorized"
