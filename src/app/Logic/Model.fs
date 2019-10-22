@@ -153,9 +153,12 @@ module Logic =
             | AskForCancellation (_, requestId) ->
                 if (user <> Employee relatedUserId) then
                     Error "Unauthorized"
-                else
+                else 
                     let requestState = defaultArg (userRequests.TryFind requestId) NotCreated
-                    askForCancellation requestState
+                    if currentDate < requestState.Request.Start.Date then
+                        Error "The request can be cancelled directly"
+                    else
+                        askForCancellation requestState
             | DenyRequest (_, requestId) ->
                 if user <> Manager then
                     Error "Unauthorized"

@@ -298,4 +298,17 @@ let askForCancellationTests =
       |> Then (Ok [RequestAwaitingCancellation request]) "The request should be waiting for cancellation"
     }
     
+    test "Ask for cancellation of a not started request" {
+      let request = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2019, 10, 15); HalfDay = AM }
+        End = { Date = DateTime(2019, 10, 30); HalfDay = PM } }
+
+      Given [ RequestValidated request ]
+      |> ConnectedAs (Employee "jdoe") 
+      |> When (AskForCancellation ("jdoe", request.RequestId))
+      |> Then (Error "The request can be cancelled directly") "The request can be cancelled directly"
+    }
+    
   ]
