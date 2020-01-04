@@ -169,3 +169,20 @@ module Logic =
                     let requestState = defaultArg (userRequests.TryFind requestId) NotCreated
                     denyRequest requestState
         
+    let generateDaysBetweenTwoDates (s : DateTime) (e: DateTime) =
+        Seq.unfold (fun day -> if day <= e then Some(day, day.AddDays(1.0)) else None) s
+        
+    let isWorkingDay (date: DateTime) : bool =
+        if date.DayOfWeek.Equals DayOfWeek.Saturday || date.DayOfWeek.Equals DayOfWeek.Sunday
+        then false
+        else true
+    
+    let countWorkingDays days =
+        Seq.filter isWorkingDay days |> Seq.length
+       
+    let countTimeOffDuration (request: TimeOffRequest) : double =
+        let daysBetweenStartAndEnd = generateDaysBetweenTwoDates request.Start.Date request.End.Date
+        let days: double = double (countWorkingDays daysBetweenStartAndEnd)
+        let halfDay = request.Start.HalfDay = request.End.HalfDay
+        let duration = if halfDay then days - 0.5 else days
+        duration

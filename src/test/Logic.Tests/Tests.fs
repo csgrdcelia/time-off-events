@@ -392,3 +392,62 @@ let askForCancellationTests =
     }
     
   ]
+  
+[<Tests>] 
+let timeOffCountTests =
+  testList "Count days of a TimeOff request" [
+    test "Unique day time off" {
+      let request = {
+        UserId = "jeod"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2020, 01, 02); HalfDay = AM }
+        End = { Date = DateTime(2020, 01, 02); HalfDay = PM }
+      }
+      
+      Expect.equal (Logic.countTimeOffDuration request) 1. "Unique day time off should be equal to 1"
+    }
+    
+    test "Couple days time off" {
+      let request = {
+        UserId = "jeod"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2020, 01, 02); HalfDay = AM }
+        End = { Date = DateTime(2020, 01, 03); HalfDay = PM }
+      }
+      
+      Expect.equal (Logic.countTimeOffDuration request) 2. "Couple days time off should be equal to 2"
+    }
+    
+    test "Half day time off" {
+      let request = {
+        UserId = "jeod"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2020, 01, 02); HalfDay = AM }
+        End = { Date = DateTime(2020, 01, 02); HalfDay = AM }
+      }
+      
+      Expect.equal (Logic.countTimeOffDuration request) 0.5 "Half day time off should be equal to 0.5"
+    }
+    
+    test "One and a half days time off" {
+      let request = {
+        UserId = "jeod"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2020, 01, 02); HalfDay = AM }
+        End = { Date = DateTime(2020, 01, 03); HalfDay = AM }
+      }
+      
+      Expect.equal (Logic.countTimeOffDuration request) 1.5 "One and a half days time off should be equal to 1.5"
+    }
+    
+    test "Week time off" {
+      let request = {
+        UserId = "jeod"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2020, 01, 02); HalfDay = AM }
+        End = { Date = DateTime(2020, 01, 08); HalfDay = PM }
+      }
+      
+      Expect.equal (Logic.countTimeOffDuration request) 5. "Week time off should be equal to 5"
+    }
+  ]
