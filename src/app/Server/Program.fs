@@ -52,6 +52,19 @@ module HttpHandlers =
                 | Error message ->
                     return! (BAD_REQUEST message) next ctx
             }
+     
+    let cancelRequest (handleCommand: Command -> Result<RequestEvent list, string>) =
+        fun (next: HttpFunc) (ctx: HttpContext) ->
+            task {
+                let userAndRequestId = ctx.BindQueryString<UserAndRequestId>()
+                let command = CancelRequest (userAndRequestId.UserId, userAndRequestId.RequestId)
+                let result = handleCommand command
+                match result with
+                | Ok [RequestCancelled timeOffRequest] -> return! json timeOffRequest next ctx
+                | Ok _ -> return! Successful.NO_CONTENT next ctx
+                | Error message ->
+                    return! (BAD_REQUEST message) next ctx
+            }
 
 // ---------------------------------
 // Web app
@@ -60,13 +73,11 @@ module HttpHandlers =
 let webApp (eventStore: IStore<UserId, RequestEvent>) =
     let handleCommand (user: User) (command: Command) =
         let userId = command.UserId
-
         let eventStream = eventStore.GetStream(userId)
         let state = eventStream.ReadAll() |> Seq.fold Logic.evolveUserRequests Map.empty
 
         // Decide how to handle the command
         let result = Logic.decide DateTime.Today state user command
-
         // Save events in case of success
         match result with
         | Ok events -> eventStream.Append(events)
@@ -84,6 +95,7 @@ let webApp (eventStore: IStore<UserId, RequestEvent>) =
                         choose [
                             POST >=> route "/request" >=> HttpHandlers.requestTimeOff (handleCommand user)
                             POST >=> route "/validate-request" >=> HttpHandlers.validateRequest (handleCommand user)
+                            POST >=> route "/cancel-request" >=> HttpHandlers.cancelRequest (handleCommand user)
                         ]
                     ))
             ])
@@ -130,9 +142,8 @@ let main _ =
     let contentRoot = Directory.GetCurrentDirectory()
 
     //let eventStore = InMemoryStore.Create<UserId, RequestEvent>()
-    let storagePath = System.IO.Path.Combine(contentRoot, "../../../.storage", "userRequests")
+    let storagePath = System.IO.Path.Combine(contentRoot, "..\..\..\.storage", "userRequests")
     let eventStore = FileSystemStore.Create<UserId, RequestEvent>(storagePath, sprintf "%s")
-
     let webRoot = Path.Combine(contentRoot, "WebRoot")
     WebHostBuilder()
         .UseKestrel()

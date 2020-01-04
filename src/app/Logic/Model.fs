@@ -168,3 +168,4 @@ module Logic =
                 else
                     let requestState = defaultArg (userRequests.TryFind requestId) NotCreated
                     denyRequest requestState
+        
