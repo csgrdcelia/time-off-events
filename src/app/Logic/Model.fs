@@ -56,7 +56,7 @@ module Logic =
         member this.IsActive =
             match this with
             | NotCreated -> false
-            | Cancelled _ -> true
+            | Cancelled _ -> false
             | PendingValidation _
             | PendingCancellation _ -> true
             | Validated _ -> true
