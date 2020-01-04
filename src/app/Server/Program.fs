@@ -31,7 +31,12 @@ module HttpHandlers =
     let requestTimeOff (handleCommand: Command -> Result<RequestEvent list, string>) =
         fun (next: HttpFunc) (ctx: HttpContext) ->
             task {
-                let! timeOffRequest = ctx.BindJsonAsync<TimeOffRequest>()
+                let! bindedTOR = ctx.BindJsonAsync<TimeOffRequest>()
+                let timeOffRequest = {UserId = bindedTOR.UserId;
+                                      RequestId = Guid.NewGuid();
+                                      Start = bindedTOR.Start;
+                                      End = bindedTOR.End}
+                
                 let command = RequestTimeOff timeOffRequest
                 let result = handleCommand command
                 match result with
