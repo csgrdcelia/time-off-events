@@ -65,6 +65,19 @@ module HttpHandlers =
                 | Error message ->
                     return! (BAD_REQUEST message) next ctx
             }
+            
+    let denyRequest (handleCommand: Command -> Result<RequestEvent list, string>) =
+        fun(next: HttpFunc) (ctx: HttpContext) ->
+            task {
+                let userAndRequestId = ctx.BindQueryString<UserAndRequestId>()
+                let command = DenyRequest(userAndRequestId.UserId, userAndRequestId.RequestId)
+                let result = handleCommand command
+                match result with
+                | Ok [RequestDenied timeOffRequest] -> return! json timeOffRequest next ctx
+                | Ok _ -> return! Successful.NO_CONTENT next ctx
+                | Error message ->
+                    return! (BAD_REQUEST message) next ctx
+            }
 
 // ---------------------------------
 // Web app
@@ -96,6 +109,7 @@ let webApp (eventStore: IStore<UserId, RequestEvent>) =
                             POST >=> route "/request" >=> HttpHandlers.requestTimeOff (handleCommand user)
                             POST >=> route "/validate-request" >=> HttpHandlers.validateRequest (handleCommand user)
                             POST >=> route "/cancel-request" >=> HttpHandlers.cancelRequest (handleCommand user)
+                            POST >=> route "/deny-request" >=> HttpHandlers.denyRequest (handleCommand user)
                         ]
                     ))
             ])
