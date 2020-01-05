@@ -450,4 +450,15 @@ let timeOffCountTests =
       
       Expect.equal (Logic.countTimeOffDuration request) 5. "Week time off should be equal to 5"
     }
+    
+    test "Week time off with a public holiday" {
+      let request = {
+        UserId = "jeod"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2019, 12, 23); HalfDay = AM }
+        End = { Date = DateTime(2019, 12, 27); HalfDay = PM }
+      }
+      
+      Expect.equal (Logic.countTimeOffDuration request) 4. "Should be equal to 4"
+    }
   ]

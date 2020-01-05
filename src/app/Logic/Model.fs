@@ -172,8 +172,16 @@ module Logic =
     let generateDaysBetweenTwoDates (s : DateTime) (e: DateTime) =
         Seq.unfold (fun day -> if day <= e then Some(day, day.AddDays(1.0)) else None) s
         
+    let getPublicHolidays: list<DateTime> = //Should calculate the days for a year but Pâques is boring
+        [
+            DateTime(2019, 01, 01); DateTime(2019, 04, 22); DateTime(2019, 05, 01); DateTime(2019, 05, 30);
+            DateTime(2019, 06, 10); DateTime(2019, 07, 14); DateTime(2019, 08, 15); DateTime(2019, 11, 1);
+            DateTime(2019, 11, 11); DateTime(2019, 12, 25); DateTime(2020, 01, 01) 
+        ]
+        
     let isWorkingDay (date: DateTime) : bool =
-        if date.DayOfWeek.Equals DayOfWeek.Saturday || date.DayOfWeek.Equals DayOfWeek.Sunday
+        if date.DayOfWeek.Equals DayOfWeek.Saturday || date.DayOfWeek.Equals DayOfWeek.Sunday ||
+           (List.exists (fun publicHoliday -> date = publicHoliday) getPublicHolidays)
         then false
         else true
     
