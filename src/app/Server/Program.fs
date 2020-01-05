@@ -83,6 +83,30 @@ module HttpHandlers =
                 | Error message ->
                     return! (BAD_REQUEST message) next ctx
             }
+            
+    let createLeaveBalance (handleCommand: Command -> Result<RequestEvent list, string>) =
+        fun(next: HttpFunc) (ctx: HttpContext) ->
+            task {
+                Console.WriteLine "test"
+                let userId =
+                    match ctx.GetQueryStringValue "UserId" with
+                    | Ok value -> value
+                    | Error _ -> ""
+                Console.WriteLine userId
+                let leaveBalanceRequest =
+                  { UserId = userId;
+                    GrantedLeave = 1.0;
+                    CarriedLeave = 2.0;
+                    LeaveTaken = 3.0;
+                    CurrentBalance = 4.0; } 
+                let command = RequestLeaveBalance leaveBalanceRequest
+                let result = handleCommand command
+                match result with
+                | Ok [LeaveBalanceCreated request] -> return! json request next ctx
+                | Ok _ -> return! Successful.NO_CONTENT next ctx
+                | Error message ->
+                    return! (BAD_REQUEST message) next ctx
+            }
 
 // ---------------------------------
 // Web app
@@ -115,6 +139,7 @@ let webApp (eventStore: IStore<UserId, RequestEvent>) =
                             POST >=> route "/validate-request" >=> HttpHandlers.validateRequest (handleCommand user)
                             POST >=> route "/cancel-request" >=> HttpHandlers.cancelRequest (handleCommand user)
                             POST >=> route "/deny-request" >=> HttpHandlers.denyRequest (handleCommand user)
+                            GET >=> route "/balance" >=> HttpHandlers.createLeaveBalance (handleCommand user)
                         ]
                     ))
             ])

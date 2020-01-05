@@ -9,6 +9,7 @@ type Command =
     | CancelRequest of UserId * Guid
     | AskForCancellation of UserId * Guid
     | DenyRequest of UserId * Guid
+    | RequestLeaveBalance of LeaveBalanceRequest
     with
     member this.UserId =
         match this with
@@ -17,6 +18,7 @@ type Command =
         | CancelRequest (userId, _) -> userId
         | AskForCancellation (userId, _) -> userId
         | DenyRequest (userId, _) -> userId
+        | RequestLeaveBalance request -> request.UserId
 
 // And our events
 type RequestEvent =
@@ -25,6 +27,7 @@ type RequestEvent =
     | RequestCancelled of TimeOffRequest
     | RequestDenied of TimeOffRequest
     | RequestPendingCancellation of TimeOffRequest
+    | LeaveBalanceCreated of LeaveBalanceRequest
     with
     member this.Request =
         match this with
@@ -44,7 +47,8 @@ module Logic =
         | PendingValidation of TimeOffRequest
         | PendingCancellation of TimeOffRequest
         | Validated of TimeOffRequest
-        | Denied of TimeOffRequest with
+        | Denied of TimeOffRequest
+        with
         member this.Request =
             match this with
             | NotCreated -> invalidOp "Not created"
@@ -121,22 +125,29 @@ module Logic =
             Ok [RequestPendingCancellation request]
         | _ ->
             Error "Request cannot be pending cancellation"
+    
+    let createLeaveBalance activeUserRequests currentDate request =
+        let request = { UserId = request.UserId;
+                    GrantedLeave = 1.0;
+                    CarriedLeave = 2.0;
+                    LeaveTaken = 3.0;
+                    CurrentBalance = 4.0; }
+        Ok [LeaveBalanceCreated request]
 
     let decide (currentDate: DateTime) (userRequests: UserRequestsState) (user: User) (command: Command) =
         let relatedUserId = command.UserId
+        let activeUserRequests =
+                    userRequests
+                    |> Map.toSeq
+                    |> Seq.map (fun (_, state) -> state)
+                    |> Seq.where (fun state -> state.IsActive)
+                    |> Seq.map (fun state -> state.Request)
         match user with
         | Employee userId when userId <> relatedUserId ->
             Error "Unauthorized"
         | _ ->
             match command with
             | RequestTimeOff request ->
-                let activeUserRequests =
-                    userRequests
-                    |> Map.toSeq
-                    |> Seq.map (fun (_, state) -> state)
-                    |> Seq.where (fun state -> state.IsActive)
-                    |> Seq.map (fun state -> state.Request)
-
                 createRequest activeUserRequests currentDate request
 
             | ValidateRequest (_, requestId) ->
@@ -168,6 +179,8 @@ module Logic =
                 else
                     let requestState = defaultArg (userRequests.TryFind requestId) NotCreated
                     denyRequest requestState
+            | RequestLeaveBalance request ->
+                createLeaveBalance activeUserRequests currentDate request
         
     let generateDaysBetweenTwoDates (s : DateTime) (e: DateTime) =
         Seq.unfold (fun day -> if day <= e then Some(day, day.AddDays(1.0)) else None) s
@@ -179,10 +192,11 @@ module Logic =
     
     let countWorkingDays days =
         Seq.filter isWorkingDay days |> Seq.length
-       
+        
     let countTimeOffDuration (request: TimeOffRequest) : double =
         let daysBetweenStartAndEnd = generateDaysBetweenTwoDates request.Start.Date request.End.Date
         let days: double = double (countWorkingDays daysBetweenStartAndEnd)
         let halfDay = request.Start.HalfDay = request.End.HalfDay
         let duration = if halfDay then days - 0.5 else days
         duration
+        
