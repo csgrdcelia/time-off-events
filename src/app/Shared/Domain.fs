@@ -24,3 +24,11 @@ type TimeOffRequest = {
     Start: Boundary
     End: Boundary
 }
+
+[<CLIMutable>]
+type LeaveBalance = {
+    GrantedLeave: float
+    CarriedLeave: float
+    TakenLeave: float
+    CurrentBalance: float
+}

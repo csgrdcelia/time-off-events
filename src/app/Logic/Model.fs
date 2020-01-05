@@ -168,7 +168,7 @@ module Logic =
                 else
                     let requestState = defaultArg (userRequests.TryFind requestId) NotCreated
                     denyRequest requestState
-        
+                    
     let generateDaysBetweenTwoDates (s : DateTime) (e: DateTime) =
         Seq.unfold (fun day -> if day <= e then Some(day, day.AddDays(1.0)) else None) s
         
@@ -186,3 +186,23 @@ module Logic =
         let halfDay = request.Start.HalfDay = request.End.HalfDay
         let duration = if halfDay then days - 0.5 else days
         duration
+        
+                        
+    let getGrantedLeave currentDate =
+        2.5 // TODO: count granted leave
+    
+    let getLeaveBalance (currentDate: DateTime) (userRequests: UserRequestsState) =
+        let activeUserRequests =
+            userRequests
+            |> Map.toSeq
+            |> Seq.map (fun (_, state) -> state)
+            |> Seq.where (fun state -> state.IsActive)
+            |> Seq.map (fun state -> state.Request)
+        
+        let leaveBalance = { 
+                    GrantedLeave = getGrantedLeave currentDate;
+                    CarriedLeave = 0.0;
+                    TakenLeave = 0.0;
+                    CurrentBalance = 0.0; }
+        
+        Ok leaveBalance

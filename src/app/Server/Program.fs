@@ -31,11 +31,11 @@ module HttpHandlers =
     let requestTimeOff (handleCommand: Command -> Result<RequestEvent list, string>) =
         fun (next: HttpFunc) (ctx: HttpContext) ->
             task {
-                let! bindedTOR = ctx.BindJsonAsync<TimeOffRequest>()
-                let timeOffRequest = {UserId = bindedTOR.UserId;
+                let! boundTOR = ctx.BindJsonAsync<TimeOffRequest>()
+                let timeOffRequest = {UserId = boundTOR.UserId;
                                       RequestId = Guid.NewGuid();
-                                      Start = bindedTOR.Start;
-                                      End = bindedTOR.End}
+                                      Start = boundTOR.Start;
+                                      End = boundTOR.End}
                 
                 let command = RequestTimeOff timeOffRequest
                 let result = handleCommand command
@@ -83,12 +83,30 @@ module HttpHandlers =
                 | Error message ->
                     return! (BAD_REQUEST message) next ctx
             }
+            
+    let getLeaveBalance state =
+        fun(next: HttpFunc) (ctx: HttpContext) ->
+            task {
+                let result = Logic.getLeaveBalance DateTime.Today state
+                match result with
+                | Ok request -> return! json request next ctx
+                | Error message ->
+                    return! (BAD_REQUEST message) next ctx
+            }
+          
 
 // ---------------------------------
 // Web app
 // ---------------------------------
 
 let webApp (eventStore: IStore<UserId, RequestEvent>) =
+    let getStateOf (user) =
+        let userId = match user with
+        | Manager -> "manager"
+        | Employee userId -> userId
+        let eventStream = eventStore.GetStream(userId)
+        eventStream.ReadAll() |> Seq.fold Logic.evolveUserRequests Map.empty
+        
     let handleCommand (user: User) (command: Command) =
         let userId = command.UserId
         let eventStream = eventStore.GetStream(userId)
@@ -100,7 +118,6 @@ let webApp (eventStore: IStore<UserId, RequestEvent>) =
         match result with
         | Ok events -> eventStream.Append(events)
         | _ -> ()
-
         // Finally, return the result
         result
         
@@ -115,6 +132,7 @@ let webApp (eventStore: IStore<UserId, RequestEvent>) =
                             POST >=> route "/validate-request" >=> HttpHandlers.validateRequest (handleCommand user)
                             POST >=> route "/cancel-request" >=> HttpHandlers.cancelRequest (handleCommand user)
                             POST >=> route "/deny-request" >=> HttpHandlers.denyRequest (handleCommand user)
+                            GET >=> route "/balance" >=> HttpHandlers.getLeaveBalance (getStateOf user)
                         ]
                     ))
             ])
