@@ -187,9 +187,6 @@ module Logic =
         let duration = if halfDay then days - 0.5 else days
         duration
         
-                        
-    let getGrantedLeave currentDate =
-        2.5 // TODO: count granted leave
     
     let getLeaveBalance (currentDate: DateTime) (userRequests: UserRequestsState) =
         let activeUserRequests =
@@ -198,12 +195,16 @@ module Logic =
             |> Seq.map (fun (_, state) -> state)
             |> Seq.where (fun state -> state.IsActive)
             |> Seq.map (fun state -> state.Request)
-        
+            
+        let grantedLeave = ((float) (currentDate.Month - 1) * 2.5)
+        let carriedLeave = 0.0 // TODO: call function
+        let takenLeave = 0.0 // TODO: call function
+        let plannedLeave = 0.0 // TODO: call function
         let leaveBalance = { 
-                    GrantedLeave = getGrantedLeave currentDate;
-                    CarriedLeave = 0.0;
-                    TakenLeave = 0.0;
-                    PlannedLeave = 0.0;
-                    CurrentBalance = 0.0 }
+                    GrantedLeave = grantedLeave;
+                    CarriedLeave = carriedLeave;
+                    TakenLeave = takenLeave;
+                    PlannedLeave = plannedLeave;
+                    CurrentBalance =  grantedLeave + carriedLeave - (takenLeave + plannedLeave) }
         
         Ok leaveBalance

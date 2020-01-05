@@ -102,8 +102,8 @@ module HttpHandlers =
 let webApp (eventStore: IStore<UserId, RequestEvent>) =
     let getStateOf (user) =
         let userId = match user with
-        | Manager -> "manager"
-        | Employee userId -> userId
+            | Manager -> "manager"
+            | Employee userId -> userId
         let eventStream = eventStore.GetStream(userId)
         eventStream.ReadAll() |> Seq.fold Logic.evolveUserRequests Map.empty
         
