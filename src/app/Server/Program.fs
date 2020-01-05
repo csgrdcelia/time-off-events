@@ -27,6 +27,12 @@ module HttpHandlers =
         UserId: UserId
         RequestId: Guid
     }
+    
+    [<CLIMutable>]
+    type UserAndDate = {
+        UserId: UserId
+        Date: DateTime
+    }
 
     let requestTimeOff (handleCommand: Command -> Result<RequestEvent list, string>) =
         fun (next: HttpFunc) (ctx: HttpContext) ->
@@ -84,10 +90,12 @@ module HttpHandlers =
                     return! (BAD_REQUEST message) next ctx
             }
             
-    let getLeaveBalance state =
+    let getLeaveBalance (getStateOf: UserId -> Logic.UserRequestsState) =
         fun(next: HttpFunc) (ctx: HttpContext) ->
             task {
-                let result = Logic.getLeaveBalance DateTime.Today state
+                let userAndDate = ctx.BindQueryString<UserAndDate>()
+                let state = getStateOf userAndDate.UserId
+                let result = Logic.getLeaveBalance userAndDate.Date state
                 match result with
                 | Ok request -> return! json request next ctx
                 | Error message ->
@@ -100,10 +108,7 @@ module HttpHandlers =
 // ---------------------------------
 
 let webApp (eventStore: IStore<UserId, RequestEvent>) =
-    let getStateOf (user) =
-        let userId = match user with
-            | Manager -> "manager"
-            | Employee userId -> userId
+    let getState userId =
         let eventStream = eventStore.GetStream(userId)
         eventStream.ReadAll() |> Seq.fold Logic.evolveUserRequests Map.empty
         
@@ -132,7 +137,7 @@ let webApp (eventStore: IStore<UserId, RequestEvent>) =
                             POST >=> route "/validate-request" >=> HttpHandlers.validateRequest (handleCommand user)
                             POST >=> route "/cancel-request" >=> HttpHandlers.cancelRequest (handleCommand user)
                             POST >=> route "/deny-request" >=> HttpHandlers.denyRequest (handleCommand user)
-                            GET >=> route "/balance" >=> HttpHandlers.getLeaveBalance (getStateOf user)
+                            GET >=> route "/balance" >=> HttpHandlers.getLeaveBalance (getState)
                         ]
                     ))
             ])
