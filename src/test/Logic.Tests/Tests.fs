@@ -471,4 +471,43 @@ let leaveBalanceTests =
         | Error error -> error
       Expect.equal result.GrantedLeave 0.0 "Granted leave should be equal to 0"
     }
+    
+    test "Half day planned leave" {
+      let activeRequests = [
+        {
+          UserId = "jdoe"
+          RequestId = Guid.NewGuid()
+          Start = { Date = DateTime(2020, 01, 01); HalfDay = AM }
+          End = { Date = DateTime(2019, 01, 04); HalfDay = PM }
+        };
+        {
+          UserId = "jdoe"
+          RequestId = Guid.NewGuid()
+          Start = { Date = DateTime(2020, 01, 06); HalfDay = AM }
+          End = { Date = DateTime(2020, 01, 06); HalfDay = AM }
+        }
+      ]
+      let result = Logic.getPlannedLeave (DateTime(2020, 01, 05)) activeRequests
+      Expect.equal result 0.5 "Planned leave should be equal to 0.5"
+    }
+    
+    test "Multiple days planned leave" {
+      let activeRequests = [
+        {
+          UserId = "jdoe"
+          RequestId = Guid.NewGuid()
+          Start = { Date = DateTime(2020, 01, 01); HalfDay = AM }
+          End = { Date = DateTime(2019, 01, 04); HalfDay = PM }
+        };
+        {
+          UserId = "jdoe"
+          RequestId = Guid.NewGuid()
+          Start = { Date = DateTime(2020, 01, 06); HalfDay = AM }
+          End = { Date = DateTime(2020, 01, 10); HalfDay = PM }
+        }
+      ]
+      let result = Logic.getPlannedLeave (DateTime(2020, 01, 05)) activeRequests
+      Expect.equal result 5.0 "Planned leave should be equal to 5"
+    }
+    
   ]
