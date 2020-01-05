@@ -203,6 +203,7 @@ module Logic =
                     GrantedLeave = getGrantedLeave currentDate;
                     CarriedLeave = 0.0;
                     TakenLeave = 0.0;
-                    CurrentBalance = 0.0; }
+                    PlannedLeave = 0.0;
+                    CurrentBalance = 0.0 }
         
         Ok leaveBalance

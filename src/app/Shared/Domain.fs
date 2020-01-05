@@ -30,5 +30,6 @@ type LeaveBalance = {
     GrantedLeave: float
     CarriedLeave: float
     TakenLeave: float
+    PlannedLeave: float
     CurrentBalance: float
 }
