@@ -568,4 +568,54 @@ let leaveBalanceTests =
       Expect.equal result 5.0 "Planned leave should be equal to 5"
     }
     
+    test "No carried leaves" {
+      let activeRequests = [
+        {
+          UserId = "jdoe"
+          RequestId = Guid.NewGuid()
+          Start = { Date = DateTime(2019, 09, 02); HalfDay = AM }
+          End = { Date = DateTime(2019, 10, 11); HalfDay = PM }
+        }
+      ]
+      let result = Logic.calculateCarriedLeave (DateTime(2020, 01, 05)) activeRequests
+      Expect.equal result 0.0 "Carried leave should be equal to 0"
+    }
+    
+    test "30 carried leaves" {
+      let activeRequests = []
+      let result = Logic.calculateCarriedLeave (DateTime(2020, 01, 05)) activeRequests
+      Expect.equal result 30.0 "Carried leave should be equal to 30"
+    }
+    
+    test "14.5 carried leaves" {
+      let activeRequests = [
+        {
+          UserId = "jdoe"
+          RequestId = Guid.NewGuid()
+          Start = { Date = DateTime(2019, 09, 02); HalfDay = AM }
+          End = { Date = DateTime(2019, 09, 23); HalfDay = AM }
+        }
+      ]
+      let result = Logic.calculateCarriedLeave (DateTime(2020, 01, 05)) activeRequests
+      Expect.equal result 14.5 "Carried leave should be equal to 14.5"
+    }
+    
+    test "-5 carried leaves" {
+      let activeRequests = [
+        {
+          UserId = "jdoe"
+          RequestId = Guid.NewGuid()
+          Start = { Date = DateTime(2019, 09, 02); HalfDay = AM }
+          End = { Date = DateTime(2019, 10, 11); HalfDay = PM }
+        };
+        {
+          UserId = "jdoe"
+          RequestId = Guid.NewGuid()
+          Start = { Date = DateTime(2019, 10, 14); HalfDay = AM }
+          End = { Date = DateTime(2019, 10, 18); HalfDay = PM }
+        }
+      ]
+      let result = Logic.calculateCarriedLeave (DateTime(2020, 01, 05)) activeRequests
+      Expect.equal result -5.0 "Carried leave should be equal to -5"
+    }
   ]
