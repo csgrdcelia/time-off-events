@@ -472,6 +472,64 @@ let leaveBalanceTests =
       Expect.equal result.GrantedLeave 0.0 "Granted leave should be equal to 0"
     }
     
+    test "8 taken leave" {
+      let activeRequests = [
+        {
+          UserId = "jdoe"
+          RequestId = Guid.NewGuid()
+          Start = { Date = DateTime(2020, 01, 13); HalfDay = AM }
+          End = { Date = DateTime(2020, 01, 17); HalfDay = PM }
+        };
+        {
+          UserId = "jdoe"
+          RequestId = Guid.NewGuid()
+          Start = { Date = DateTime(2020, 01, 21); HalfDay = AM }
+          End = { Date = DateTime(2020, 01, 23); HalfDay = PM }
+        }
+      ]
+      let result = Logic.getTakenLeave (DateTime(2020, 02, 05)) activeRequests
+      Expect.equal result 8.0 "Taken leave should be equal to 8"
+    }
+    
+    test "1 taken leave" {
+      let activeRequests = [
+        {
+          UserId = "jdoe"
+          RequestId = Guid.NewGuid()
+          Start = { Date = DateTime(2020, 01, 01); HalfDay = AM }
+          End = { Date = DateTime(2020, 01, 01); HalfDay = AM }
+        };
+        {
+          UserId = "jdoe"
+          RequestId = Guid.NewGuid()
+          Start = { Date = DateTime(2020, 01, 06); HalfDay = AM }
+          End = { Date = DateTime(2020, 01, 06); HalfDay = AM }
+        }
+      ]
+      let result = Logic.getTakenLeave (DateTime(2020, 02, 05)) activeRequests
+      Expect.equal result 1.0 "Taken leave should be equal to 1"
+    }
+    
+    test "3.5 taken leave because 2020, 01, 04 is saturday" {
+      let activeRequests = [
+        {
+          UserId = "jdoe"
+          RequestId = Guid.NewGuid()
+          Start = { Date = DateTime(2020, 01, 01); HalfDay = AM }
+          End = { Date = DateTime(2020, 01, 04); HalfDay = PM }
+        };
+        {
+          UserId = "jdoe"
+          RequestId = Guid.NewGuid()
+          Start = { Date = DateTime(2020, 01, 06); HalfDay = AM }
+          End = { Date = DateTime(2020, 01, 06); HalfDay = AM }
+        }
+      ]
+      let result = Logic.getTakenLeave (DateTime(2020, 02, 05)) activeRequests
+      Expect.equal result 3.5 "Taken leave should be equal to 3.5 because 2020, 01, 04 is saturday"
+    }
+
+    
     test "Half day planned leave" {
       let activeRequests = [
         {

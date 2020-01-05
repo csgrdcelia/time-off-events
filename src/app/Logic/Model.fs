@@ -192,6 +192,12 @@ module Logic =
             |> Seq.where (fun request -> request.Start.Date > currentDate)
             |> Seq.sumBy (fun request -> countTimeOffDuration request)
         
+    let getTakenLeave (currentDate: DateTime) (activeUserRequests: seq<TimeOffRequest>) =
+        activeUserRequests
+        |> Seq.where(fun request -> request.Start.Date.Year = currentDate.Year && request.Start.Date.Month < currentDate.Month )
+        |> Seq.sumBy(fun request -> countTimeOffDuration request)
+        
+    
     let getLeaveBalance (currentDate: DateTime) (userRequests: UserRequestsState) =
         let activeUserRequests =
             userRequests
@@ -202,7 +208,7 @@ module Logic =
         
         let grantedLeave = ((float) (currentDate.Month - 1) * 2.5)
         let carriedLeave = 0.0 // TODO: call function
-        let takenLeave = 0.0 // TODO: call function
+        let takenLeave = getTakenLeave currentDate activeUserRequests
         let plannedLeave = getPlannedLeave currentDate activeUserRequests
         let leaveBalance = { 
                     GrantedLeave = grantedLeave;
