@@ -27,6 +27,12 @@ module HttpHandlers =
         UserId: UserId
         RequestId: Guid
     }
+    
+    [<CLIMutable>]
+    type UserAndDate = {
+        UserId: UserId
+        Date: DateTime
+    }
 
     let requestTimeOff (handleCommand: Command -> Result<RequestEvent list, string>) =
         fun (next: HttpFunc) (ctx: HttpContext) ->
@@ -84,6 +90,19 @@ module HttpHandlers =
                     return! (BAD_REQUEST message) next ctx
             }
             
+    let getLeaveBalance (getStateOf: UserId -> Logic.UserRequestsState) =
+        fun(next: HttpFunc) (ctx: HttpContext) ->
+            task {
+                let userAndDate = ctx.BindQueryString<UserAndDate>()
+                let state = getStateOf userAndDate.UserId
+                let result = Logic.getLeaveBalance userAndDate.Date state
+                match result with
+                | Ok request -> return! json request next ctx
+                | Error message ->
+                    return! (BAD_REQUEST message) next ctx
+            }
+          
+            
     let askForCancellation(handleCommand: Command -> Result<RequestEvent list, string>) =
         fun(next: HttpFunc) (ctx: HttpContext) ->
             task {
@@ -102,6 +121,10 @@ module HttpHandlers =
 // ---------------------------------
 
 let webApp (eventStore: IStore<UserId, RequestEvent>) =
+    let getState userId =
+        let eventStream = eventStore.GetStream(userId)
+        eventStream.ReadAll() |> Seq.fold Logic.evolveUserRequests Map.empty
+        
     let handleCommand (user: User) (command: Command) =
         let userId = command.UserId
         let eventStream = eventStore.GetStream(userId)
@@ -129,6 +152,7 @@ let webApp (eventStore: IStore<UserId, RequestEvent>) =
                             POST >=> route "/cancel-request" >=> HttpHandlers.cancelRequest (handleCommand user)
                             POST >=> route "/deny-request" >=> HttpHandlers.denyRequest (handleCommand user)
                             POST >=> route "/ask-for-cancellation" >=> HttpHandlers.askForCancellation(handleCommand user)
+                            GET >=> route "/balance" >=> HttpHandlers.getLeaveBalance (getState)
                         ]
                     ))
             ])
