@@ -23,6 +23,7 @@ type TimeOffRequest = {
     RequestId: Guid
     Start: Boundary
     End: Boundary
+    TreatmentDate: DateTime
 }
 
 [<CLIMutable>]

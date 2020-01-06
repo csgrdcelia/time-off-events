@@ -27,6 +27,7 @@ let overlapTests =
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 10, 1); HalfDay = AM }
         End = { Date = DateTime(2019, 10, 1); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
       }
 
       Expect.isTrue (Logic.overlapsWith request request) "A request should overlap with istself"
@@ -38,6 +39,7 @@ let overlapTests =
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 10, 1); HalfDay = AM }
         End = { Date = DateTime(2019, 10, 1); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
       }
 
       let request2 = {
@@ -45,6 +47,7 @@ let overlapTests =
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 10, 2); HalfDay = AM }
         End = { Date = DateTime(2019, 10, 2); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
       }
 
       Expect.isFalse (Logic.overlapsWith request1 request2) "The requests don't overlap"
@@ -56,6 +59,7 @@ let overlapTests =
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 09, 12); HalfDay = AM }
         End = { Date = DateTime(2019, 09, 13); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
       }
 
       let request2 = {
@@ -63,6 +67,7 @@ let overlapTests =
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 09, 13); HalfDay = PM }
         End = { Date = DateTime(2019, 09, 14); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
       }
 
       Expect.isTrue (Logic.overlapsWith request1 request2) "The request should overlaps"
@@ -74,6 +79,7 @@ let overlapTests =
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 09, 12); HalfDay = AM }
         End = { Date = DateTime(2019, 09, 13); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
       }
 
       let request2 = {
@@ -81,6 +87,7 @@ let overlapTests =
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 09, 13); HalfDay = PM }
         End = { Date = DateTime(2019, 09, 14); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
       }
 
       Expect.isTrue (Logic.overlapsWith request2 request1) "The request should overlaps"
@@ -92,6 +99,7 @@ let overlapTests =
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 09, 12); HalfDay = AM }
         End = { Date = DateTime(2019, 09, 13); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
       }
 
       let existingRequests = [
@@ -100,12 +108,14 @@ let overlapTests =
           RequestId = Guid.NewGuid()
           Start = { Date = DateTime(2019, 09, 10); HalfDay = AM }
           End = { Date = DateTime(2019, 09, 11); HalfDay = PM }
+          TreatmentDate = DateTime(2019, 01, 02)
         };
         {
           UserId = "jdoe"
           RequestId = Guid.NewGuid()
           Start = { Date = DateTime(2019, 09, 13); HalfDay = PM }
           End = { Date = DateTime(2019, 09, 14); HalfDay = PM }
+          TreatmentDate = DateTime(2019, 01, 02)
         }
       ]
 
@@ -121,6 +131,7 @@ let overlapTests =
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 09, 12); HalfDay = AM }
         End = { Date = DateTime(2019, 09, 12); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
       }
 
       let existingRequests = [
@@ -129,12 +140,14 @@ let overlapTests =
           RequestId = Guid.NewGuid()
           Start = { Date = DateTime(2019, 09, 10); HalfDay = AM }
           End = { Date = DateTime(2019, 09, 11); HalfDay = PM }
+          TreatmentDate = DateTime(2019, 01, 02)
         };
         {
           UserId = "jdoe"
           RequestId = Guid.NewGuid()
           Start = { Date = DateTime(2019, 09, 13); HalfDay = PM }
           End = { Date = DateTime(2019, 09, 14); HalfDay = PM }
+          TreatmentDate = DateTime(2019, 01, 02)
         }
       ]
 
@@ -153,7 +166,9 @@ let creationTests =
         UserId = "jdoe"
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 12, 27); HalfDay = AM }
-        End = { Date = DateTime(2019, 12, 27); HalfDay = PM } }
+        End = { Date = DateTime(2019, 12, 27); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
+      }
 
       Given []
       |> ConnectedAs(Employee "jdoe")
@@ -170,7 +185,9 @@ let validationTests =
         UserId = "jdoe"
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 12, 27); HalfDay = AM }
-        End = { Date = DateTime(2019, 12, 27); HalfDay = PM } }
+        End = { Date = DateTime(2019, 12, 27); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
+      }
 
       Given [ RequestCreated request ]
       |> ConnectedAs Manager
@@ -187,7 +204,9 @@ let denyTests =
         UserId = "jdoe"
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 12, 27); HalfDay = AM }
-        End = { Date = DateTime(2019, 12, 27); HalfDay = PM } }
+        End = { Date = DateTime(2019, 12, 27); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
+      }
 
       Given [ RequestCreated request ]
       |> ConnectedAs Manager
@@ -200,7 +219,9 @@ let denyTests =
         UserId = "jdoe"
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 12, 27); HalfDay = AM }
-        End = { Date = DateTime(2019, 12, 27); HalfDay = PM } }
+        End = { Date = DateTime(2019, 12, 27); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
+      }
 
       Given [ RequestCreated request ]
       |> ConnectedAs(Employee "jdoe")
@@ -218,6 +239,7 @@ let cancelTests =
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 12, 27); HalfDay = AM }
         End = { Date = DateTime(2019, 12, 27); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
       }
 
       Given [ RequestCreated request ]
@@ -232,6 +254,7 @@ let cancelTests =
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 12, 27); HalfDay = AM }
         End = { Date = DateTime(2019, 12, 27); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
       }
 
       Given [ RequestCreated request ]
@@ -246,6 +269,7 @@ let cancelTests =
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 12, 27); HalfDay = AM }
         End = { Date = DateTime(2019, 12, 27); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
       }
 
       Given [ RequestCancelled request ]
@@ -260,6 +284,7 @@ let cancelTests =
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 12, 27); HalfDay = AM }
         End = { Date = DateTime(2019, 12, 27); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
       }
 
       Given [ RequestValidated request ]
@@ -274,6 +299,7 @@ let cancelTests =
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 12, 27); HalfDay = AM }
         End = { Date = DateTime(2019, 12, 27); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
       }
 
       Given [ RequestCreated request ]
@@ -288,6 +314,7 @@ let cancelTests =
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 09, 27); HalfDay = AM }
         End = { Date = DateTime(2019, 12, 27); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
       }
 
       Given [ RequestCreated request ]
@@ -302,6 +329,7 @@ let cancelTests =
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 10, 01); HalfDay = PM }
         End = { Date = DateTime(2019, 12, 27); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
       }
 
       Given [ RequestCreated request ]
@@ -310,6 +338,7 @@ let cancelTests =
       |> Then (Error "The request has begun or begins this afternoon") "The user should ask for cancellation"
     }
   ]
+
 [<Tests>]
 let askForCancellationTests =
   testList "Ask for cancellation tests" [
@@ -318,7 +347,9 @@ let askForCancellationTests =
         UserId = "jdoe"
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 09, 30); HalfDay = AM }
-        End = { Date = DateTime(2019, 10, 3); HalfDay = PM } }
+        End = { Date = DateTime(2019, 10, 3); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
+      }
 
       Given [ RequestValidated request ]
       |> ConnectedAs(Employee "jdoe")
@@ -331,7 +362,9 @@ let askForCancellationTests =
         UserId = "jdoe"
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 10, 01); HalfDay = PM }
-        End = { Date = DateTime(2019, 10, 3); HalfDay = PM } }
+        End = { Date = DateTime(2019, 10, 3); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
+      }
 
       Given [ RequestValidated request ]
       |> ConnectedAs(Employee "jdoe")
@@ -344,7 +377,9 @@ let askForCancellationTests =
         UserId = "jdoe"
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 09, 30); HalfDay = AM }
-        End = { Date = DateTime(2019, 10, 3); HalfDay = PM } }
+        End = { Date = DateTime(2019, 10, 3); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
+      }
 
       Given [ RequestCreated request ]
       |> ConnectedAs(Employee "jdoe")
@@ -357,7 +392,9 @@ let askForCancellationTests =
         UserId = "jdoe"
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 09, 30); HalfDay = AM }
-        End = { Date = DateTime(2019, 10, 3); HalfDay = PM } }
+        End = { Date = DateTime(2019, 10, 3); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
+      }
 
       Given [ RequestDenied request ]
       |> ConnectedAs(Employee "jdoe")
@@ -370,7 +407,9 @@ let askForCancellationTests =
         UserId = "jdoe"
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 10, 15); HalfDay = AM }
-        End = { Date = DateTime(2019, 10, 30); HalfDay = PM } }
+        End = { Date = DateTime(2019, 10, 30); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
+      }
 
       Given [ RequestValidated request ]
       |> ConnectedAs(Employee "jdoe")
@@ -383,7 +422,9 @@ let askForCancellationTests =
         UserId = "jdoe"
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 09, 30); HalfDay = AM }
-        End = { Date = DateTime(2019, 10, 3); HalfDay = PM } }
+        End = { Date = DateTime(2019, 10, 3); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
+      }
 
       Given [ RequestValidated request ]
       |> ConnectedAs Manager
@@ -402,6 +443,7 @@ let timeOffCountTests =
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2020, 01, 02); HalfDay = AM }
         End = { Date = DateTime(2020, 01, 02); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
       }
 
       Expect.equal (Logic.countTimeOffDuration request) 1. "Unique day time off should be equal to 1"
@@ -413,6 +455,7 @@ let timeOffCountTests =
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2020, 01, 02); HalfDay = AM }
         End = { Date = DateTime(2020, 01, 03); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
       }
 
       Expect.equal (Logic.countTimeOffDuration request) 2. "Couple days time off should be equal to 2"
@@ -424,6 +467,7 @@ let timeOffCountTests =
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2020, 01, 02); HalfDay = AM }
         End = { Date = DateTime(2020, 01, 02); HalfDay = AM }
+        TreatmentDate = DateTime(2019, 01, 02)
       }
 
       Expect.equal (Logic.countTimeOffDuration request) 0.5 "Half day time off should be equal to 0.5"
@@ -435,6 +479,7 @@ let timeOffCountTests =
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2020, 01, 02); HalfDay = AM }
         End = { Date = DateTime(2020, 01, 03); HalfDay = AM }
+        TreatmentDate = DateTime(2019, 01, 02)
       }
 
       Expect.equal (Logic.countTimeOffDuration request) 1.5 "One and a half days time off should be equal to 1.5"
@@ -446,6 +491,7 @@ let timeOffCountTests =
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2020, 01, 02); HalfDay = AM }
         End = { Date = DateTime(2020, 01, 08); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
       }
 
       Expect.equal (Logic.countTimeOffDuration request) 5. "Week time off should be equal to 5"
@@ -457,6 +503,7 @@ let timeOffCountTests =
         RequestId = Guid.NewGuid()
         Start = { Date = DateTime(2019, 12, 23); HalfDay = AM }
         End = { Date = DateTime(2019, 12, 27); HalfDay = PM }
+        TreatmentDate = DateTime(2019, 01, 02)
       }
       
       Expect.equal (Logic.countTimeOffDuration request) 4. "Should be equal to 4"
@@ -490,12 +537,14 @@ let leaveBalanceTests =
           RequestId = Guid.NewGuid()
           Start = { Date = DateTime(2020, 01, 13); HalfDay = AM }
           End = { Date = DateTime(2020, 01, 17); HalfDay = PM }
+          TreatmentDate = DateTime(2019, 01, 02)
         };
         {
           UserId = "jdoe"
           RequestId = Guid.NewGuid()
           Start = { Date = DateTime(2020, 01, 21); HalfDay = AM }
           End = { Date = DateTime(2020, 01, 23); HalfDay = PM }
+          TreatmentDate = DateTime(2019, 01, 02)
         }
       ]
       let result = Logic.getTakenLeave (DateTime(2020, 02, 05)) activeRequests
@@ -509,12 +558,14 @@ let leaveBalanceTests =
           RequestId = Guid.NewGuid()
           Start = { Date = DateTime(2020, 01, 02); HalfDay = AM }
           End = { Date = DateTime(2020, 01, 02); HalfDay = AM }
+          TreatmentDate = DateTime(2019, 01, 02)
         };
         {
           UserId = "jdoe"
           RequestId = Guid.NewGuid()
           Start = { Date = DateTime(2020, 01, 06); HalfDay = AM }
           End = { Date = DateTime(2020, 01, 06); HalfDay = AM }
+          TreatmentDate = DateTime(2019, 01, 02)
         }
       ]
       let result = Logic.getTakenLeave (DateTime(2020, 02, 05)) activeRequests
@@ -528,12 +579,14 @@ let leaveBalanceTests =
           RequestId = Guid.NewGuid()
           Start = { Date = DateTime(2020, 01, 02); HalfDay = AM }
           End = { Date = DateTime(2020, 01, 04); HalfDay = PM }
+          TreatmentDate = DateTime(2019, 01, 02)
         };
         {
           UserId = "jdoe"
           RequestId = Guid.NewGuid()
           Start = { Date = DateTime(2020, 01, 06); HalfDay = AM }
           End = { Date = DateTime(2020, 01, 06); HalfDay = AM }
+          TreatmentDate = DateTime(2019, 01, 02)
         }
       ]
       let result = Logic.getTakenLeave (DateTime(2020, 02, 05)) activeRequests
@@ -548,12 +601,14 @@ let leaveBalanceTests =
           RequestId = Guid.NewGuid()
           Start = { Date = DateTime(2020, 01, 01); HalfDay = AM }
           End = { Date = DateTime(2019, 01, 04); HalfDay = PM }
+          TreatmentDate = DateTime(2019, 01, 02)
         };
         {
           UserId = "jdoe"
           RequestId = Guid.NewGuid()
           Start = { Date = DateTime(2020, 01, 06); HalfDay = AM }
           End = { Date = DateTime(2020, 01, 06); HalfDay = AM }
+          TreatmentDate = DateTime(2019, 01, 02)
         }
       ]
       let result = Logic.getPlannedLeave (DateTime(2020, 01, 05)) activeRequests
@@ -567,12 +622,14 @@ let leaveBalanceTests =
           RequestId = Guid.NewGuid()
           Start = { Date = DateTime(2020, 01, 01); HalfDay = AM }
           End = { Date = DateTime(2019, 01, 04); HalfDay = PM }
+          TreatmentDate = DateTime(2019, 01, 02)
         };
         {
           UserId = "jdoe"
           RequestId = Guid.NewGuid()
           Start = { Date = DateTime(2020, 01, 06); HalfDay = AM }
           End = { Date = DateTime(2020, 01, 10); HalfDay = PM }
+          TreatmentDate = DateTime(2019, 01, 02)
         }
       ]
       let result = Logic.getPlannedLeave (DateTime(2020, 01, 05)) activeRequests
@@ -586,6 +643,7 @@ let leaveBalanceTests =
           RequestId = Guid.NewGuid()
           Start = { Date = DateTime(2019, 09, 02); HalfDay = AM }
           End = { Date = DateTime(2019, 10, 11); HalfDay = PM }
+          TreatmentDate = DateTime(2019, 01, 02)
         }
       ]
       let result = Logic.calculateCarriedLeave (DateTime(2020, 01, 05)) activeRequests
@@ -605,6 +663,7 @@ let leaveBalanceTests =
           RequestId = Guid.NewGuid()
           Start = { Date = DateTime(2019, 09, 02); HalfDay = AM }
           End = { Date = DateTime(2019, 09, 23); HalfDay = AM }
+          TreatmentDate = DateTime(2019, 01, 02)
         }
       ]
       let result = Logic.calculateCarriedLeave (DateTime(2020, 01, 05)) activeRequests
@@ -618,12 +677,14 @@ let leaveBalanceTests =
           RequestId = Guid.NewGuid()
           Start = { Date = DateTime(2019, 09, 02); HalfDay = AM }
           End = { Date = DateTime(2019, 10, 11); HalfDay = PM }
+          TreatmentDate = DateTime(2019, 01, 02)
         };
         {
           UserId = "jdoe"
           RequestId = Guid.NewGuid()
           Start = { Date = DateTime(2019, 10, 14); HalfDay = AM }
           End = { Date = DateTime(2019, 10, 18); HalfDay = PM }
+          TreatmentDate = DateTime(2019, 01, 02)
         }
       ]
       let result = Logic.calculateCarriedLeave (DateTime(2020, 01, 05)) activeRequests

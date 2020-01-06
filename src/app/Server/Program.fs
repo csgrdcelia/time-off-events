@@ -41,7 +41,8 @@ module HttpHandlers =
                 let timeOffRequest = {UserId = bindedTOR.UserId;
                                       RequestId = Guid.NewGuid();
                                       Start = bindedTOR.Start;
-                                      End = bindedTOR.End}
+                                      End = bindedTOR.End;
+                                      TreatmentDate = DateTime.Now}
                 
                 let command = RequestTimeOff timeOffRequest
                 let result = handleCommand command
@@ -101,7 +102,14 @@ module HttpHandlers =
                 | Error message ->
                     return! (BAD_REQUEST message) next ctx
             }
-          
+    
+    let getHistory (getEventsOf: UserId -> seq<RequestEvent>) =
+        fun(next: HttpFunc) (ctx: HttpContext) ->
+            task {
+                let userAndDate = ctx.BindQueryString<UserAndDate>()
+                let result = getEventsOf userAndDate.UserId
+                return! json result next ctx
+            }
             
     let askForCancellation(handleCommand: Command -> Result<RequestEvent list, string>) =
         fun(next: HttpFunc) (ctx: HttpContext) ->
@@ -121,9 +129,11 @@ module HttpHandlers =
 // ---------------------------------
 
 let webApp (eventStore: IStore<UserId, RequestEvent>) =
-    let getState userId =
+    let getEvents userId =
         let eventStream = eventStore.GetStream(userId)
-        eventStream.ReadAll() |> Seq.fold Logic.evolveUserRequests Map.empty
+        eventStream.ReadAll()
+    
+    let getState userId = getEvents userId |> Seq.fold Logic.evolveUserRequests Map.empty
         
     let handleCommand (user: User) (command: Command) =
         let userId = command.UserId
@@ -153,6 +163,7 @@ let webApp (eventStore: IStore<UserId, RequestEvent>) =
                             POST >=> route "/deny-request" >=> HttpHandlers.denyRequest (handleCommand user)
                             POST >=> route "/ask-for-cancellation" >=> HttpHandlers.askForCancellation(handleCommand user)
                             GET >=> route "/balance" >=> HttpHandlers.getLeaveBalance (getState)
+                            GET >=> route "/history" >=> HttpHandlers.getHistory(getEvents)
                         ]
                     ))
             ])
